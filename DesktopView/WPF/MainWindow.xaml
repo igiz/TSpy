@@ -1,0 +1,148 @@
+﻿<Window x:Class="DesktopView.WPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:resources="clr-namespace:DesktopView.Resources"
+        xmlns:interrogationApi="clr-namespace:API.Interrogation;assembly=API"
+        xmlns:converters="clr-namespace:DesktopView.WPF.Converters"
+        Title="{x:Static resources:UIResources.MainWindowTitle}" Height="620" Width="880" Icon="{Binding WindowIcon}">
+    <Window.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="ControlTemplates/ControlTemplates.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+            <converters:BoolToEnumConverter x:Key="BoolToEnumConverter" />
+        </ResourceDictionary>
+    </Window.Resources>
+    <Grid Background="#292f33">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="0.35*" />
+            <RowDefinition Height="5*" />
+            <RowDefinition Height="1.8*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width=".8*" />
+            <ColumnDefinition Width=".5*" />
+            <ColumnDefinition Width=".5*" />
+        </Grid.ColumnDefinitions>
+        <TextBox Name="searchBox" FontSize="12pt" FontFamily="Calibri" Foreground="Black" Background ="#ccd6dd" Grid.Row="0" Grid.Column="0" BorderBrush="Black" Text="{Binding SearchText, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" Margin="2" />
+        <Border Grid.Row="0" Grid.Column="1" Margin="7,0">
+            <Grid>
+                <Grid.Resources>
+                    <Style TargetType="RadioButton">
+                        <Setter Property="Margin" Value="0,6" />
+                        <Setter Property="Foreground" Value="White" />
+                    </Style>
+                </Grid.Resources>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+                <RadioButton Name="searchUser" Grid.Row="0" Grid.Column="0" Content="User" GroupName="searchByGroup" IsChecked="{Binding Path=FilterBy, Converter={StaticResource BoolToEnumConverter}, ConverterParameter={x:Static interrogationApi:FilterBy.User} }" />
+                <RadioButton Name="searchTweet" Grid.Row="0" Grid.Column="1" Content="Tweet" GroupName="searchByGroup" IsChecked="{Binding Path=FilterBy, Converter={StaticResource BoolToEnumConverter}, ConverterParameter={x:Static interrogationApi:FilterBy.Tweet} }"/>
+                <RadioButton Name="searchCountry" Grid.Row="0" Grid.Column="2" Content="Country" GroupName="searchByGroup" IsChecked="{Binding Path=FilterBy, Converter={StaticResource BoolToEnumConverter}, ConverterParameter={x:Static interrogationApi:FilterBy.Country} }" />
+            </Grid>
+        </Border>
+        <Button  Name="searchButton" Content="Search" Grid.Row="0" Grid.Column="2" BorderBrush="Black" Margin="2" Command="{Binding SearchCommand}">
+            <Button.Resources>
+                <Style TargetType="Button">
+                    <Style.Triggers>
+                        <Trigger Property="IsEnabled" Value="true">
+                            <Setter Property="Background" Value="#55acee" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter Property="Background" Value="#e1e8ed" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Resources>
+        </Button>
+        <Button  Name="connectDisconnectButton" Foreground="White" Grid.Row="0" Grid.Column="3" BorderBrush="Black" Margin="2" Command="{Binding ConnectDisconnectCommand}">
+            <Button.Resources>
+                <Style TargetType="Button">
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Connected}" Value="false">
+                            <Setter Property="Content" Value="Connect" />
+                            <Setter Property="Background" Value="Green" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Connected}" Value="true">
+                            <Setter Property="Content" Value="Disconnect" />
+                            <Setter Property="Background" Value="Red" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Button.Resources>
+        </Button>
+        <ListView ItemsSource="{Binding Content}" Background="#292f33" Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" Margin="2" Name="lvTweets">
+            <ListView.Resources>
+                <Style TargetType="GridViewColumnHeader">
+                    <Setter Property="Background" Value=" #66757f" />
+                    <Setter Property="Foreground" Value="White" />
+                </Style>
+                <Style TargetType="ListView">
+                    <Setter Property="AlternationCount" Value="2" />
+                </Style>
+                <Style TargetType="ListViewItem">
+                    <EventSetter Event="MouseDoubleClick" Handler="OnTweetDoubleClick"/>
+                    <Setter Property="Foreground" Value="Black" />
+                    <Style.Triggers>
+                        <Trigger Property="ItemsControl.AlternationIndex" Value="0">
+                            <Setter Property="Background" Value="#ccd6dd" />
+                        </Trigger>
+                        <Trigger Property="ItemsControl.AlternationIndex" Value="1">
+                            <Setter Property="Background" Value="#8899a6" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.Resources>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Time" Width="140" DisplayMemberBinding="{Binding Time}" />
+                    <GridViewColumn Header="User" Width="110" DisplayMemberBinding="{Binding User.Name}" />
+                    <GridViewColumn Header="Country" Width="110" DisplayMemberBinding="{Binding Country}" />
+                    <GridViewColumn Header="Tweet" Width="600">
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Tweet}" TextTrimming="CharacterEllipsis" MaxHeight="20" ToolTip="{Binding RelativeSource={RelativeSource Self}, Path=Text}" />
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+        <ListView Name="logBox" ItemsSource="{Binding LogMessagesView, Mode=OneWay}" Grid.Row="2" Grid.RowSpan="1" ScrollViewer.VerticalScrollBarVisibility="Auto" Grid.Column="0"
+                 Grid.ColumnSpan="4" BorderBrush="Black" Background="#292f33" Margin="2">
+            <ListView.Resources>
+                <Style TargetType="GridViewColumnHeader">
+                    <Setter Property="Background" Value="#66757f" />
+                    <Setter Property="Foreground" Value="White" />
+                </Style>
+                <Style TargetType="ListViewItem">
+                    <Setter Property="ToolTip" Value="{Binding Severity}" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding Severity}" Value="Error">
+                            <Setter Property="Foreground" Value="White" />
+                            <Setter Property="Background" Value="Red" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Severity}" Value="Information">
+                            <Setter Property="Foreground" Value="White" />
+                            <Setter Property="Background" Value="#55acee" />
+                        </DataTrigger>
+                        <DataTrigger Binding="{Binding Severity}" Value="Warning">
+                            <Setter Property="Foreground" Value="White" />
+                            <Setter Property="Background" Value="Orange" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </ListView.Resources>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Time" Width="140" DisplayMemberBinding="{Binding Time}" />
+                    <GridViewColumn Header="Severity" Width="110" DisplayMemberBinding="{Binding Severity}" />
+                    <GridViewColumn Header="Message" Width="600" DisplayMemberBinding="{Binding Message}" />
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+</Window>
